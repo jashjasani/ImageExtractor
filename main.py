@@ -397,8 +397,8 @@ window.title("BZS Image Tool")
 
 
 
-window.state("zoomed")
-window.resizable(False, False)
+# window.state("iconic")
+# window.resizable(False, False)
 window.configure(bg="#E5E5E5")
 
 canvas = Canvas(
