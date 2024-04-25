@@ -1,4 +1,11 @@
-config
-*.json
+config/
 output/Application
 output/Application.zip
+venv/
+input/
+images/
+ExtractorZip/
+old.py
+*.zip
+*.mp4
+*.pdf

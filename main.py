@@ -16,9 +16,9 @@ from pymongo.server_api import ServerApi
 import pickle
 from pathlib import Path
 from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, ttk, Label, Toplevel,BooleanVar, Checkbutton
-
+import traceback
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+ASSETS_PATH = OUTPUT_PATH / Path("./New Folder/assets")
 
 with open('config/cloudinary.json', 'r') as cloudinary_config_file:
     txt = cloudinary_config_file.read()
@@ -71,8 +71,8 @@ def findDuplicates():
     window.update_idletasks()
     allMags = list(collection.aggregate(
         [
-            {"$group": {"_id": "$SKU", "unique_ids": {"$addToSet": "$_id"}, "count": {"$sum": 1}}},
-            {"$sort": {"_id": -1}},
+            {"$group": {"_id": "$Images", "unique_ids": {"$addToSet": "$_id"}, "count": {"$sum": 1}}},
+            {"$sort": {"_id": 1}},
             {"$match": {"count": {"$gte": 2}}}
         ]
     ))
@@ -191,7 +191,7 @@ def uploadJson(Obj):
     try:
         x = collection.insert_one(dict(Obj))
     except Exception as e:
-        print(e)
+        print(e.with_traceback())
 
 def findMonths(Ausgabe, Publication, YEAR):
     monthnames = {
@@ -352,8 +352,9 @@ def mainLoop():
             time.sleep(0.01)
             metadata = pyexiv2.Image(ImageFolder + '/' + img, encoding='iso-8859-1')
             data = metadata.read_iptc()
-            Info = img.split(" ")
-            jsonModel["SKU"] = img.split(".")[0].lower().replace(" ", "-")
+            Info = img.split("_")
+            sku = img.split(".")[0].lower().rsplit("_", 1)[0].replace("_", "-") + "-({})".format(jsonModel["Ausgabe"])
+            jsonModel["SKU"] = sku
             if len(Info) > 4:
                 length = len(Info)
                 Name = ""
@@ -366,8 +367,8 @@ def mainLoop():
             jsonModel['Jahrzehnt'].append(decadeCalculator(int(Info[-3])))
             jsonModel["Jahr"] = int(Info[-3])
             jsonModel["FileName"] = img.split(".")[0].replace(" ", " ")
-            jsonModel["Date"] = Info[-3] + " " + Info[-2].lower() + " " + Info[-1].split(")")[0].split("(")[1]
-            jsonModel["Ausgabe"] = int(Info[-1].split(")")[0].split("(")[1]) 
+            jsonModel["Date"] = Info[-3] + " " + Info[-2].lower() + " " + Info[-1].split(".")[0]
+            jsonModel["Ausgabe"] = int(Info[-1].split(".")[0]) 
             frequencyAssign(Info[-2])
             imageId = jsonModel["Name"].replace(" ", "_") + "_" + str(jsonModel["Jahr"]) + "_" + jsonModel[
                 "Publication"].lower() + "_" + str(jsonModel["Ausgabe"])
@@ -445,6 +446,7 @@ def mainLoop():
             count += 1
         except Exception as e:
             error_count += 1
+            traceback.print_exception(type(e), e, e.__traceback__)            
             f_error.write(img + " : " + str(e) + '\n')
             ProgressBar['value'] += intervalLength
             window.update_idletasks()
