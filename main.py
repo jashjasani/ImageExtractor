@@ -4,6 +4,7 @@ import json
 import unicodedata
 from tkinter import filedialog
 from PIL import ImageTk, Image
+import cloudinary.exceptions
 import pyexiv2
 import cloudinary
 import time
@@ -18,7 +19,7 @@ from pathlib import Path
 from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, ttk, Label, Toplevel,BooleanVar, Checkbutton
 import traceback
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path("./New Folder/assets")
+ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 
 with open('config/cloudinary.json', 'r') as cloudinary_config_file:
     txt = cloudinary_config_file.read()
@@ -71,7 +72,7 @@ def findDuplicates():
     window.update_idletasks()
     allMags = list(collection.aggregate(
         [
-            {"$group": {"_id": "$Images", "unique_ids": {"$addToSet": "$_id"}, "count": {"$sum": 1}}},
+            {"$group": {"_id": "$SKU", "unique_ids": {"$addToSet": "$_id"}, "count": {"$sum": 1}}},
             {"$sort": {"_id": 1}},
             {"$match": {"count": {"$gte": 2}}}
         ]
@@ -191,7 +192,7 @@ def uploadJson(Obj):
     try:
         x = collection.insert_one(dict(Obj))
     except Exception as e:
-        print(e.with_traceback())
+        f_error.write(e.with_traceback())
 
 def findMonths(Ausgabe, Publication, YEAR):
     monthnames = {
@@ -328,6 +329,7 @@ def mainLoop():
         return
     error_count = 0
     main_label.config(text="Extracting data from " + str(len(AllImagesInInput)) + " Images.", bg="#BF8563")
+    window.update_idletasks()
     output = []
     count = 1
     ProgressBar.config(length=100, mode="determinate", value=1)
@@ -353,8 +355,9 @@ def mainLoop():
             metadata = pyexiv2.Image(ImageFolder + '/' + img, encoding='iso-8859-1')
             data = metadata.read_iptc()
             Info = img.split("_")
-            sku = img.split(".")[0].lower().rsplit("_", 1)[0].replace("_", "-") + "-({})".format(jsonModel["Ausgabe"])
-            jsonModel["SKU"] = sku
+        
+
+            jsonModel["SKU"] = img.split(".")[0].rsplit("_", 1)[0].replace("_", "-") + "-({})".format(img.split(".")[0].lower().rsplit("_", 1)[1])
             if len(Info) > 4:
                 length = len(Info)
                 Name = ""
@@ -432,13 +435,19 @@ def mainLoop():
             if bool(mongodb_config_dict["JsonUpload"]):
                 uploadJson(dict(jsonModel))
             if bool(cloudinary_config_dict["ImageUpload"]):
+                
                 publicId = jsonModel["Name"].replace(" ", "_") + "_" + str(jsonModel["Jahr"]) + "_" + jsonModel[
                     "Publication"].lower() + "_" + str(jsonModel["Ausgabe"])
-                x = cloudinary.uploader.upload(ImageFolder + '/' + img,
-                                               folder="images",
-                                               public_id=publicId,
-                                               overwrite=True,
-                                               resource_type="image")
+                try:
+                    x = cloudinary.uploader.upload(ImageFolder + '/' + img,
+                                                folder="images",
+                                                public_id=publicId,
+                                                overwrite=True,
+                                                resource_type="image")
+                except cloudinary.exceptions.Error as e:
+                    # If there was an error during the upload, the exception will be caught here
+                    f_error.write("Error uploading image : " + img + '\n')
+
             ProgressBar['value'] += intervalLength
             window.update_idletasks()
             if count < len(AllImagesInInput):
@@ -446,7 +455,7 @@ def mainLoop():
             count += 1
         except Exception as e:
             error_count += 1
-            traceback.print_exception(type(e), e, e.__traceback__)            
+            # traceback.print_exception(type(e), e, e.__traceback__)            
             f_error.write(img + " : " + str(e) + '\n')
             ProgressBar['value'] += intervalLength
             window.update_idletasks()
