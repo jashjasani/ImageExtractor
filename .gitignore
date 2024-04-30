@@ -1,6 +1,5 @@
 config/
-output/Application
-output/Application.zip
+output/
 venv/
 input/
 images/
@@ -9,3 +8,5 @@ old.py
 *.zip
 *.mp4
 *.pdf
+dependencies/
+*.ps1

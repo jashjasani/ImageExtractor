@@ -317,13 +317,20 @@ def calculateDays(WEEK, YEAR):
         return dates
 
 
+
+def getMetadata(path):
+    with open(path,"rb+") as file:
+        metadata = pyexiv2.ImageData(file.read())
+        data = metadata.read_iptc()
+        return data
+
 def mainLoop():
     ProgressBar['value'] = 0
     window.update_idletasks()
     if ImageFolder == " ":
         main_label.config(text="Select a valid folder", bg="Red")
         return
-    AllImagesInInput = [unicodedata.normalize('NFC', f) for f in os.listdir(ImageFolder)]
+    AllImagesInInput = os.listdir(ImageFolder)
     if len(AllImagesInInput) < 1:
         main_label.config(text="No images found in the folder", bg="Orange")
         return
@@ -334,7 +341,7 @@ def mainLoop():
     count = 1
     ProgressBar.config(length=100, mode="determinate", value=1)
     intervalLength = 100 / len(AllImagesInInput)
-    f = open("./output/Data.json", "w", encoding="utf-8")
+    f = open("./output/Data.json", "w", encoding="utf-8", errors="replace")
     f.write("[")
     sort = 1
     f_error = open('output/errors.txt', 'w')
@@ -352,12 +359,10 @@ def mainLoop():
         jsonModel["Tags"].clear()
         try:
             time.sleep(0.01)
-            metadata = pyexiv2.Image(ImageFolder + '/' + img, encoding='iso-8859-1')
-            data = metadata.read_iptc()
-            Info = img.split("_")
-        
+            data = getMetadata(os.path.join(ImageFolder, img))
+            Info = img.split(" ")
 
-            jsonModel["SKU"] = img.split(".")[0].rsplit("_", 1)[0].replace("_", "-") + "-({})".format(img.split(".")[0].lower().rsplit("_", 1)[1])
+            jsonModel["SKU"] = img.split(".")[0].rsplit(" ", 1)[0].replace(" ", "-") + "-{}".format(img.split(".")[0].lower().rsplit(" ", 1)[1])
             if len(Info) > 4:
                 length = len(Info)
                 Name = ""
@@ -371,7 +376,7 @@ def mainLoop():
             jsonModel["Jahr"] = int(Info[-3])
             jsonModel["FileName"] = img.split(".")[0].replace(" ", " ")
             jsonModel["Date"] = Info[-3] + " " + Info[-2].lower() + " " + Info[-1].split(".")[0]
-            jsonModel["Ausgabe"] = int(Info[-1].split(".")[0]) 
+            jsonModel["Ausgabe"] = int(Info[-1].split(".")[0][1:-1]) 
             frequencyAssign(Info[-2])
             imageId = jsonModel["Name"].replace(" ", "_") + "_" + str(jsonModel["Jahr"]) + "_" + jsonModel[
                 "Publication"].lower() + "_" + str(jsonModel["Ausgabe"])
@@ -455,7 +460,7 @@ def mainLoop():
             count += 1
         except Exception as e:
             error_count += 1
-            # traceback.print_exception(type(e), e, e.__traceback__)            
+            traceback.print_exception(type(e), e, e.__traceback__)            
             f_error.write(img + " : " + str(e) + '\n')
             ProgressBar['value'] += intervalLength
             window.update_idletasks()
@@ -543,7 +548,7 @@ def open_settings_window():
 
 window = Tk()
 window.title("BZS Image Tool V4.1.3")
-# window.iconbitmap(relative_to_assets("Frame_16.ico"))
+window.iconbitmap(relative_to_assets("Frame_16.ico"))
 window.geometry("1000x800")
 window.configure(bg="#E5E5E5")
 
