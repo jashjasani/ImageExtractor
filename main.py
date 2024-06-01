@@ -361,23 +361,17 @@ def mainLoop():
             time.sleep(0.01)
             data = getMetadata(os.path.join(ImageFolder, img))
             Info = img.split(" ")
+            
 
-            jsonModel["SKU"] = img.split(".")[0].rsplit(" ", 1)[0].replace(" ", "-") + "-{}".format(img.split(".")[0].lower().rsplit(" ", 1)[1])
-            if len(Info) > 4:
-                length = len(Info)
-                Name = ""
-                for i in range(0, length - 4 + 1):
-                    Name += Info[i] + " "
-                Name = Name.rstrip(Name[-1])
-                jsonModel["Name"] = Name
-            else:
-                jsonModel["Name"] = Info[0]
+            jsonModel["Name"] = " ".join(Info[:-3])
             jsonModel['Jahrzehnt'].append(decadeCalculator(int(Info[-3])))
             jsonModel["Jahr"] = int(Info[-3])
             jsonModel["FileName"] = img.split(".")[0].replace(" ", " ")
             jsonModel["Date"] = Info[-3] + " " + Info[-2].lower() + " " + Info[-1].split(".")[0]
             jsonModel["Ausgabe"] = int(Info[-1].split(".")[0][1:-1]) 
             frequencyAssign(Info[-2])
+            jsonModel["SKU"] = ("-".join([jsonModel["Name"], str(jsonModel["Jahr"]), jsonModel["Publication"]]) + "-(" + str(jsonModel["Ausgabe"]) + ")").lower()
+
             imageId = jsonModel["Name"].replace(" ", "_") + "_" + str(jsonModel["Jahr"]) + "_" + jsonModel[
                 "Publication"].lower() + "_" + str(jsonModel["Ausgabe"])
             jsonModel["Images"] = "images/" + imageId
@@ -548,7 +542,7 @@ def open_settings_window():
 
 window = Tk()
 window.title("BZS Image Tool V4.1.3")
-window.iconbitmap(relative_to_assets("Frame_16.ico"))
+# window.iconbitmap(relative_to_assets("Frame_16.ico"))
 window.geometry("1000x800")
 window.configure(bg="#E5E5E5")
 
