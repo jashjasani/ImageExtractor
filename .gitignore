@@ -10,3 +10,4 @@ old.py
 *.pdf
 dependencies/
 *.ps1
+pyexiv2/
