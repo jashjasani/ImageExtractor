@@ -389,9 +389,9 @@ def mainLoop():
                 Days = calculateBiWeekly(int(jsonModel["Ausgabe"]), int(jsonModel["Jahr"]))
                 jsonModel["Tag"] = Days
             elif jsonModel["Publication"] == "M2":
-                jsonModel["Tag"] = np.arange(1, months[int(jsonModel["Ausgabe"]) * 2] + 1).tolist()
+                jsonModel["Tag"] = [f"{num:02d}" for num in np.arange(1, months[int(jsonModel["Ausgabe"]) * 2] + 1)]
             elif jsonModel["Publication"] == "M":
-                jsonModel["Tag"] = np.arange(1, months[int(jsonModel["Ausgabe"])] + 1).tolist()
+                jsonModel["Tag"] = [f"{num:02d}" for num in np.arange(1, months[int(jsonModel["Ausgabe"])] + 1)]
             elif jsonModel["Publication"] == "M3":
                 if int(jsonModel["Ausgabe"]) % 3 == 0:
                     jsonModel["Tag"] = np.arange(1, 10).tolist()
