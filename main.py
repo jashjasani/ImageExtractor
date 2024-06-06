@@ -370,12 +370,12 @@ def mainLoop():
             jsonModel["Date"] = Info[-3] + " " + Info[-2].lower() + " " + Info[-1].split(".")[0]
             jsonModel["Ausgabe"] = int(Info[-1].split(".")[0][1:-1]) 
             frequencyAssign(Info[-2])
-            jsonModel["SKU"] = ("-".join([jsonModel["Name"], str(jsonModel["Jahr"]), jsonModel["Publication"]]) + "-(" + str(jsonModel["Ausgabe"]) + ")").lower()
+            jsonModel["SKU"] = ("-".join([jsonModel["Name"].replace(" ", "-"), str(jsonModel["Jahr"]), jsonModel["Publication"]]) + "-(" + str(jsonModel["Ausgabe"]) + ")").lower()
 
             imageId = jsonModel["Name"].replace(" ", "_") + "_" + str(jsonModel["Jahr"]) + "_" + jsonModel[
                 "Publication"].lower() + "_" + str(jsonModel["Ausgabe"])
-            jsonModel["Images"] = "images/" + imageId
-            jsonModel["imglink"] = imageId
+            jsonModel["Images"] = "images/" + imageId.lower()
+            jsonModel["imglink"] = imageId.lower()
             if sort == 0:
                 sort = 1
             jsonModel["sort"] = sort
@@ -435,8 +435,7 @@ def mainLoop():
                 uploadJson(dict(jsonModel))
             if bool(cloudinary_config_dict["ImageUpload"]):
                 
-                publicId = jsonModel["Name"].replace(" ", "_") + "_" + str(jsonModel["Jahr"]) + "_" + jsonModel[
-                    "Publication"].lower() + "_" + str(jsonModel["Ausgabe"])
+                publicId = jsonModel["imglink"]
                 try:
                     x = cloudinary.uploader.upload(ImageFolder + '/' + img,
                                                 folder="images",
